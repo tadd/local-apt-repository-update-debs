@@ -1,0 +1,5 @@
+https://zoom.us/client/latest/zoom_amd64.deb # zoom
+https://discord.com/api/download?platform=linux&format=deb # discord
+github:sharkdp/bat # bat, == "sharkdp/bat:bat_%v_%a.deb"
+github:dandavison/delta:git-delta # delta
+github:rclone:rclone-v%v-linux-%a.deb # rclone
