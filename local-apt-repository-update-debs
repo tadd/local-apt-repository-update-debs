@@ -79,7 +79,6 @@ fetch_direct() {
     local -r url="$1"
     pushd "$DEBS" >/dev/null
     if (( debug )); then
-        pwd
         echo "$url" >&2
         popd >/dev/null
         return
@@ -108,19 +107,20 @@ github_format_pkg() {
 }
 
 github_url() {
-    local -n e=$1
+    local -n ret=$1 e=$2
     local -r repos="${e[repos]}"
     local base ver pkg
     github_url_base base $repos
     github_latest_version ver "$base"
     github_format_pkg pkg "${e[pkg]}" $ver
-    echo "$base/$pkg"
+    ret="$base/$pkg"
 }
 
 
 fetch_github() {
     local -nr ent=$1
-    local -r url="$(github_url ent)"
+    local url
+    github_url url ent
     fetch_direct "$url"
 }
 
