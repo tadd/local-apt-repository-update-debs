@@ -99,12 +99,17 @@ github_url_base() {
 }
 
 declare -r arch=$(dpkg --print-architecture)
+github_format_pkg() {
+    local -r pkg=$1 v=$2
+    echo $pkg | sed "s/%a/$arch/; s/%v/$v/"
+}
+
 github_url() {
     local -n e=$1
     local -r repos="${e[repos]}"
     local -r base="$(github_url_base $repos)"
     local -r ver=$(github_latest_version "$base")
-    local -r pkg=$(echo ${e[pkg]} | sed "s/%a/$arch/; s/%v/$ver/")
+    local -r pkg="$(github_format_pkg "${e[pkg]}" $ver)"
     echo "$base/$pkg"
 }
 
