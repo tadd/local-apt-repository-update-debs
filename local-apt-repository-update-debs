@@ -1,5 +1,4 @@
 #!/bin/bash -eu
-set -o pipefail
 
 DEBS=${DEBS:-/srv/local-apt-repository}
 CONFS=${CONFS:-/etc/local-apt-repository-fetch-deb}
