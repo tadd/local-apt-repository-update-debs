@@ -74,6 +74,7 @@ load_conf() {
     done < $path
 }
 
+declare -r wget='wget --no-verbose'
 fetch_direct() {
     local -r debug=0
     local -r url="$1"
@@ -84,13 +85,13 @@ fetch_direct() {
         popd >/dev/null
         return
     fi
-    wget --content-disposition --no-verbose -N "$url"
+    $wget --content-disposition -N "$url"
     popd >/dev/null
 }
 
 github_latest_version() {
     local -r base="$1"
-    wget --spider -qS "$base" 2>&1|sed -r 's|  Location: .*/v?([^/]+)$|\1|p;d'
+    $wget --spider -S "$base" 2>&1|sed -r 's|  Location: .*/v?([^/]+)$|\1|p;d'
 }
 
 github_url_base() {
