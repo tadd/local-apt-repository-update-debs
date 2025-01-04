@@ -75,10 +75,17 @@ load_conf() {
 }
 
 fetch_direct() {
+    local -r debug=0
     local -r url="$1"
-    # echo "$url" >&2
-    # return
-    wget --content-disposition -qN "$url"
+    pushd "$DEBS" >/dev/null
+    if (( debug )); then
+        pwd
+        echo "$url" >&2
+        popd >/dev/null
+        return
+    fi
+    wget --content-disposition --no-verbose -N "$url"
+    popd >/dev/null
 }
 
 github_latest_version() {
