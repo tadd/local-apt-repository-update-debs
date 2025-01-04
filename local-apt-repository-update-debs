@@ -3,8 +3,6 @@
 DEBS=${DEBS:-/srv/local-apt-repository}
 CONFS=${CONFS:-/etc/local-apt-repository-fetch-deb}
 
-declare -r progname=$(basename $0)
-
 dumpvar() {
     declare -p "$1" | sed -r 's/^[^=]*=\(?//; s/\)?$//'
 }
@@ -73,9 +71,7 @@ load_conf() {
     done < $path
 }
 
-declare -r wget='wget --no-verbose'
 fetch_direct() {
-    local -r debug=0
     local -r url="$1"
     pushd "$DEBS" >/dev/null
     if (( debug )); then
@@ -99,7 +95,6 @@ github_url_base() {
     ret="https://github.com/$repos/releases/latest/download"
 }
 
-declare -r arch=$(dpkg --print-architecture)
 github_format_pkg() {
     local -n ret=$1
     local -r pk=$2 v=$3
@@ -143,6 +138,12 @@ fetch() {
 }
 
 main() {
+    # globals
+    local -r arch=$(dpkg --print-architecture)
+    local -r wget='wget --no-verbose'
+    local -r progname=$(basename $0)
+    local -r debug=0
+
     local -a conf
     load_conf conf
     fetch conf
