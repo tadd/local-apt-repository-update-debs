@@ -90,27 +90,31 @@ fetch_direct() {
 }
 
 github_latest_version() {
-    local -r base="$1"
-    $wget --spider -S "$base" 2>&1|sed -r 's|  Location: .*/v?([^/]+)$|\1|p;d'
+    local -n ret=$1
+    local -r base="$2"
+    ret=$($wget --spider -S "$base" 2>&1|sed -r 's|  Location: .*/v?([^/]+)$|\1|p;d')
 }
 
 github_url_base() {
-    local -r repos="$1"
-    echo "https://github.com/$repos/releases/latest/download"
+    local -n ret=$1
+    local -r repos="$2"
+    ret="https://github.com/$repos/releases/latest/download"
 }
 
 declare -r arch=$(dpkg --print-architecture)
 github_format_pkg() {
-    local -r pkg=$1 v=$2
-    echo $pkg | sed "s/%a/$arch/; s/%v/$v/"
+    local -n ret=$1
+    local -r pk=$2 v=$3
+    ret=$(echo $pk | sed "s/%a/$arch/; s/%v/$v/")
 }
 
 github_url() {
     local -n e=$1
     local -r repos="${e[repos]}"
-    local -r base="$(github_url_base $repos)"
-    local -r ver=$(github_latest_version "$base")
-    local -r pkg="$(github_format_pkg "${e[pkg]}" $ver)"
+    local base ver pkg
+    github_url_base base $repos
+    github_latest_version ver "$base"
+    github_format_pkg pkg "${e[pkg]}" $ver
     echo "$base/$pkg"
 }
 
