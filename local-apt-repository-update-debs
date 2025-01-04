@@ -17,7 +17,16 @@ extract_array() {
     eval "ret=($s)"
 }
 
-expand_repos() {
+github_expand_conf() {
+    local -n ret2=$1
+    local -nr rw=$2
+    local repos=${rw[1]} pkg=${rw[2]-}
+    github_expand_repos repos
+    github_expand_pkg pkg repos
+    ret2+=([repos]=$repos [pkg]=$pkg)
+}
+
+github_expand_repos() {
     local -n ret=$1
     if [[ $ret == */* ]]; then
         return
@@ -25,8 +34,9 @@ expand_repos() {
     ret=$ret/$ret
 }
 
-expand_pkg() {
-    local -n ret=$1 repo=$2
+github_expand_pkg() {
+    local -n ret=$1
+    local -nr repo=$2
     if [[ $ret == *.deb ]]; then
         return
     fi
@@ -47,13 +57,10 @@ expand_conf() {
             ret+=([url]="$line")
             ;;
         github)
-            local repos=${row[1]} pkg=${row[2]-}
-            expand_repos repos
-            expand_pkg pkg repos
-            ret+=([repos]=$repos [pkg]=$pkg)
+            github_expand_conf ret row
             ;;
         *)
-            echo unknown protocol: "'${entry[proto]}'" in "$line" >&2
+            echo unknown protocol: "'$proto'" in "$line" >&2
             exit 2
             ;;
     esac
