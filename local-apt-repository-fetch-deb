@@ -97,7 +97,8 @@ github_url() {
     local -r repos="${e[repos]}"
     local -r base="$(github_url_base $repos)"
     local -r ver=$(github_latest_version "$base")
-    echo "$base/$(echo ${e[pkg]} | sed "s/%a/$arch/; s/%v/$ver/")"
+    local -r pkg=$(echo ${e[pkg]} | sed "s/%a/$arch/; s/%v/$ver/")
+    echo "$base/$pkg"
 }
 
 
