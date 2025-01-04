@@ -19,16 +19,16 @@ extract_array() {
     eval "ret=($s)"
 }
 
-github_expand_conf() {
+github.expand_conf() {
     local -n ret2=$1
     local -nr rw=$2
     local repos=${rw[1]} pkg=${rw[2]-}
-    github_expand_repos repos
-    github_expand_pkg pkg repos
+    github.expand_repos repos
+    github.expand_pkg pkg repos
     ret2+=([repos]=$repos [pkg]=$pkg)
 }
 
-github_expand_repos() {
+github.expand_repos() {
     local -n ret=$1
     if [[ $ret == */* ]]; then
         return
@@ -36,7 +36,7 @@ github_expand_repos() {
     ret=$ret/$ret
 }
 
-github_expand_pkg() {
+github.expand_pkg() {
     local -n ret=$1
     local -nr repo=$2
     if [[ $ret == *.deb ]]; then
@@ -63,6 +63,12 @@ normalize_proto() {
     esac
 }
 
+direct.expand_conf() {
+    local -n ret2=$1
+    local -nr lin=$3
+    ret2+=([url]="$lin")
+}
+
 expand_conf() {
     local -n ret=$1
     local -r line="$(echo "$2" | sed 's/ *#.*//')"
@@ -70,18 +76,7 @@ expand_conf() {
     local proto=${row[0]}
     normalize_proto proto line
     ret=([proto]=$proto)
-    case $proto in
-        direct)
-            ret+=([url]="$line")
-            ;;
-        github)
-            github_expand_conf ret row
-            ;;
-        *)
-            echo unknown protocol: "'$proto'" in "$line" >&2
-            exit 2
-            ;;
-    esac
+    $proto.expand_conf ret row line
 }
 
 load_conf() {
@@ -96,8 +91,9 @@ load_conf() {
     done < $path
 }
 
-fetch_direct() {
-    local -r url="$1"
+direct.fetch() {
+    local -n entr=$1
+    local -r url="${entr[url]}"
     pushd "$DEBS" >/dev/null
     if (( DEBUG )); then
         echo "$url" >&2
@@ -108,40 +104,41 @@ fetch_direct() {
     popd >/dev/null
 }
 
-github_latest_version() {
+github.latest_version() {
     local -n ret=$1
     local -r base="$2"
     ret=$($wget --spider -S "$base" 2>&1|sed -r 's|  Location: .*/v?([^/]+)$|\1|p;d')
 }
 
-github_url_base() {
+github.url_base() {
     local -n ret=$1
     local -r repos="$2"
     ret="https://github.com/$repos/releases/latest/download"
 }
 
-github_format_pkg() {
+github.format_pkg() {
     local -n ret=$1
     local -r pk=$2 v=$3
     ret=$(echo $pk | sed "s/%a/$arch/; s/%v/$v/")
 }
 
-github_url() {
+github.url() {
     local -n ret=$1 e=$2
     local -r repos="${e[repos]}"
     local base ver pkg
-    github_url_base base $repos
-    github_latest_version ver "$base"
-    github_format_pkg pkg "${e[pkg]}" $ver
+    github.url_base base $repos
+    github.latest_version ver "$base"
+    github.format_pkg pkg "${e[pkg]}" $ver
     ret="$base/$pkg"
 }
 
 
-fetch_github() {
+github.fetch() {
     local -nr ent=$1
     local url
-    github_url url ent
-    fetch_direct "$url"
+    github.url url ent
+    local -rA e=([url]="$url")
+    direct.fetch e
 }
 
 fetch() {
@@ -150,14 +147,7 @@ fetch() {
     local buf
     for buf in "${cnf[@]}"; do
         extract_array entry buf
-        case ${entry[proto]} in
-            direct)
-                fetch_direct "${entry[url]}" &
-                ;;
-            *)
-                fetch_${entry[proto]} entry &
-                ;;
-        esac
+        ${entry[proto]}.fetch entry &
     done
     wait
 }
