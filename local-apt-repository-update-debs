@@ -13,69 +13,73 @@ pp() {
 }
 
 extract_array() {
-    local -n ret=$1 s=$2
-    eval "ret=($s)"
+    local -n lret=$1
+    local -n s=$2
+    local -r assign=${3-}
+    eval "lret${assign}=(${s})"
 }
 
 github_expand_conf() {
-    local -n ret2=$1
-    local -nr rw=$2
+    local -nr rw=$1
     local repos=${rw[1]} pkg=${rw[2]-}
     github_expand_repos repos
+    repo="$ret"
     github_expand_pkg pkg repos
-    ret2+=([repos]=$repos [pkg]=$pkg)
+    pkg="$ret"
+    ret="[repos]=$repos [pkg]=$pkg"
 }
 
 github_expand_repos() {
-    local -n ret=$1
-    if [[ $ret == */* ]]; then
+    local -n repo=$1
+    ret=$repo
+    if [[ $repo == */* ]]; then
         return
     fi
-    ret=$ret/$ret
+    ret=$repo/$repo
 }
 
 github_expand_pkg() {
-    local -n ret=$1
-    local -nr repo=$2
-    if [[ $ret == *.deb ]]; then
+    local -nr pk=$1 repo=$2
+    if [[ $pk == *.deb ]]; then
         return
     fi
-    if [[ -z "$ret" ]]; then
-        ret=${repo#*/}
+    if [[ -z "$pk" ]]; then
+        pk=${repo#*/}
     fi
-    ret="${ret}_%v_%a.deb"
+    ret="${pk}_%v_%a.deb"
 }
 
 expand_conf() {
-    local -n ret=$1
-    local -r line="$(echo "$2" | sed 's/ *#.*//')"
-    local -ra row=(${line//:/ })
-    local proto=${row[0]}
-    ret=([proto]=$proto)
+    local -r line="$(echo "$1" | sed 's/ *#.*//')"
+    local -a row=(${line//:/ })
+    local -r proto=${row[0]}
+    local -A ent=([proto]=$proto) tmp=()
     case $proto in
         https|http)
-            ret+=([url]="$line")
+            ent+=([url]="$line")
             ;;
         github)
-            github_expand_conf ret row
+            github_expand_conf row
+            extract_array ent ret +
             ;;
         *)
             echo unknown protocol: "'$proto'" in "$line" >&2
             exit 2
             ;;
     esac
+    ret="$(dumpvar ent)"
 }
 
 load_conf() {
     local -r path=$CONFS/sources
-    local -n ret=$1
 
     local line
-    local -A entry
+    local -a a=()
     while read -r line; do
-        expand_conf entry "$line"
-        ret+=("$(dumpvar entry)")
+        expand_conf "$line"
+        a+=("$(dumpvar ret)")
     done < $path
+    ret="$(dumpvar a)"
 }
 
 fetch_direct() {
@@ -91,25 +95,22 @@ fetch_direct() {
 }
 
 github_latest_version() {
-    local -n ret=$1
-    local -r base="$2"
+    local -r base="$1"
     ret=$($wget --spider -S "$base" 2>&1|sed -r 's|  Location: .*/v?([^/]+)$|\1|p;d')
 }
 
 github_url_base() {
-    local -n ret=$1
-    local -r repos="$2"
+    local -r repos="$1"
     ret="https://github.com/$repos/releases/latest/download"
 }
 
 github_format_pkg() {
-    local -n ret=$1
-    local -r pk=$2 v=$3
+    local -r pk=$1 v=$2
     ret=$(echo $pk | sed "s/%a/$arch/; s/%v/$v/")
 }
 
 github_url() {
-    local -n ret=$1 e=$2
+    local -nr e=$2
     local -r repos="${e[repos]}"
     local base ver pkg
     github_url_base base $repos
@@ -132,12 +133,14 @@ fetch() {
     local buf
     for buf in "${cnf[@]}"; do
         extract_array entry buf
+        pp buf
+        pp entry
         case ${entry[proto]} in
             https|http)
-                fetch_direct "${entry[url]}" &
+                fetch_direct "${entry[url]}" #&
                 ;;
             *)
-                fetch_${entry[proto]} entry &
+                fetch_${entry[proto]} entry #&
                 ;;
         esac
     done
@@ -149,10 +152,12 @@ main() {
     local -r arch=$(dpkg --print-architecture)
     local -r wget='wget --no-verbose'
     local -r progname=$(basename $0)
-    local -r debug=0
+    local -r debug=1
+    local ret
 
     local -a conf
     load_conf conf
+    extract_array conf ret
     fetch conf
 }
 
