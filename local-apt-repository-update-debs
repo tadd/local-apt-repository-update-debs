@@ -46,14 +46,30 @@ github_expand_pkg() {
     ret="${ret}_%v_%a.deb"
 }
 
+normalize_proto() {
+    local -n ret2=$1 lin=$2
+    case $ret2 in
+        https|http)
+            ret2=direct
+            ;;
+        github)
+            ;; # let it be
+        *)
+            echo unknown protocol: "'$proto'" in "$lin" >&2
+            exit 2
+            ;;
+    esac
+}
+
 expand_conf() {
     local -n ret=$1
     local -r line="$(echo "$2" | sed 's/ *#.*//')"
     local -ra row=(${line//:/ })
     local proto=${row[0]}
+    normalize_proto proto line
     ret=([proto]=$proto)
     case $proto in
-        https|http)
+        direct)
             ret+=([url]="$line")
             ;;
         github)
@@ -133,7 +149,7 @@ fetch() {
     for buf in "${cnf[@]}"; do
         extract_array entry buf
         case ${entry[proto]} in
-            https|http)
+            direct)
                 fetch_direct "${entry[url]}" &
                 ;;
             *)
