@@ -6,7 +6,7 @@ Automatically fetches and updates 3rd-party's `*.deb` files for
 
 ## Usage
 
-1. Install `local-apt-repository` package.
+1. Install `local-apt-repository` [package](https://packages.debian.org/stable/local-apt-repository).
 2. Copy files via
 
     ```bash
