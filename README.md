@@ -6,11 +6,14 @@ Automatically fetches and updates 3rd-party's `*.deb` files for
 
 ## Usage
 
-```bash
-sudo cp update-debs update-debs-source.conf /usr/lib/local-apt-repository/
-```
+1. Install `local-apt-repository` package.
+2. Copy files via
 
-Then call `/usr/lib/local-apt-repository/update-debs` periodically with cron or systemd.
+    ```bash
+    sudo cp update-debs update-debs-source.conf /usr/lib/local-apt-repository/
+    ```
+
+3. Call `/usr/lib/local-apt-repository/update-debs` periodically with cron or systemd.
 
 ## License
 
