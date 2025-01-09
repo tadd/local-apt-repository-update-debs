@@ -100,7 +100,7 @@ direct.fetch() {
         popd >/dev/null
         return
     fi
-    $wget --content-disposition -N "$url"
+    $wget -q --content-disposition -N "$url"
     popd >/dev/null
 }
 
