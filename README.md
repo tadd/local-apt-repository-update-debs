@@ -20,6 +20,14 @@ Automatically fetches and updates 3rd-party's `*.deb` files for
 sudo apt install bash local-apt-repository wget
 ```
 
+## See Also
+
+* [local-apt-repository](https://salsa.debian.org/debian/local-apt-repository)
+  * Source of my idea for this repository, runtime dependency
+* [extrepo](https://salsa.debian.org/extrepo-team/extrepo)
+  * Looks similar but manages external (3rd-party) _APT repositories_, not individual deb
+    files as this `update-debs` does
+
 ## License
 
 [MIT.](./LICENSE.md)
