@@ -80,7 +80,7 @@ expand_conf() {
 }
 
 load_conf() {
-    local -r path=$CONFS/update-debs-source
+    local -r path=$CONFS/update-debs-source.conf
     local -n ret=$1
 
     local line

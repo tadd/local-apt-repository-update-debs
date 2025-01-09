@@ -7,8 +7,7 @@ Automatically fetches and updates 3rd-party's `*.deb` files for
 ## Usage
 
 ```bash
-sudo cp local-apt-repository-update-debs /usr/lib/local-apt-repository/update-debs
-sudo cp update-debs-soruce /usr/lib/local-apt-repository/
+sudo cp update-debs update-debs-source.conf /usr/lib/local-apt-repository/
 ```
 
 Then call `/usr/lib/local-apt-repository/update-debs` periodically with cron or systemd.
