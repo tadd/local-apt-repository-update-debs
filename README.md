@@ -11,3 +11,7 @@ sudo cp update-debs update-debs-source.conf /usr/lib/local-apt-repository/
 ```
 
 Then call `/usr/lib/local-apt-repository/update-debs` periodically with cron or systemd.
+
+## License
+
+[MIT.](./LICENSE.md)
