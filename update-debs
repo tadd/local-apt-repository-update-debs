@@ -91,6 +91,12 @@ load_conf() {
     done < $path
 }
 
+vecho() {
+    if (( opts[verbose] )); then
+        echo "$@" >&2
+    fi
+}
+
 direct.fetch() {
     local -n entr=$1
     local -r url="${entr[url]}"
@@ -100,6 +106,7 @@ direct.fetch() {
         popd >/dev/null
         return
     fi
+    vecho wget -q --content-disposition -N "$url" >&2
     $wget -q --content-disposition -N "$url"
     popd >/dev/null
 }
@@ -152,11 +159,22 @@ fetch() {
     wait
 }
 
+parseopts() {
+    local -rn o=$1
+    for arg in "$@"; do
+        if [[ ${arg} =~ ^-- ]]; then
+            o[${arg/--/}]=1
+        fi
+    done
+}
+
 main() {
     # globals
     local -r arch=$(dpkg --print-architecture)
     local -r wget='wget --no-verbose'
     local -r progname=$(basename $0)
+    local -A opts=()
+    parseopts opts "$@"
 
     local -a conf
     load_conf conf
