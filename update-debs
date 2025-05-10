@@ -100,14 +100,20 @@ vecho() {
 direct.fetch() {
     local -n entr=$1
     local -r url="${entr[url]}"
+    local wgetopts='--content-disposition -N'
     pushd "$DEBS" >/dev/null
     if (( DEBUG )); then
         echo "$url" >&2
         popd >/dev/null
         return
     fi
-    vecho wget -q --content-disposition -N "$url" >&2
-    $wget -q --content-disposition -N "$url"
+    if ((opts[verbose] )); then
+        wgetopts+=' --show-progress'
+    else
+        wgetopts+=' -q'
+    fi 
+    vecho wget $wgetopts "$url" >&2
+    $wget $wgetopts "$url"
     popd >/dev/null
 }
 
